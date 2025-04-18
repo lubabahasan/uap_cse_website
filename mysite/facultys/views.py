@@ -3,20 +3,26 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.views.decorators.csrf import csrf_protect
 
-from .forms import SignUpForm, ProfileForm
+from .forms import SignUpForm
+from .models import Profile
+
 
 def signup_view(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
-        profile_form = ProfileForm(request.POST)
 
-        if form.is_valid() and profile_form.is_valid():
+        if form.is_valid():
             user = form.save(commit=False)
+
+            full_name = form.cleaned_data.get('full_name').strip()
+            name_parts = full_name.split()
+            user.first_name = name_parts[0]
+            user.last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
+
             user.set_password(form.cleaned_data['password'])
             user.save()
 
-            profile = profile_form.save(commit=False)
-            profile.user = user
+            profile = Profile(user=user)
             profile.save()
 
             login(request, user)
@@ -24,15 +30,12 @@ def signup_view(request):
         else:
             return render(request, 'signup.html', {
                 'form': form,
-                'profile_form': profile_form
             })
     else:
         form = SignUpForm()
-        profile_form = ProfileForm()
 
     return render(request, 'signup.html', {
         'form': form,
-        'profile_form': profile_form
     })
 
 @csrf_protect
@@ -54,10 +57,9 @@ def login_view(request):
             return redirect('login')
     return render(request, 'login.html')
 
-
-
 def home(request):
     return render(request, 'home.html')
+
 
 
 
