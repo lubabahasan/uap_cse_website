@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
+from .models import AllowedEmail
 
 class SignUpForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
@@ -9,8 +10,13 @@ class SignUpForm(forms.ModelForm):
         model = User
         fields = ['full_name', 'username', 'email', 'password']
     def clean_email(self):
-        email = self.cleaned_data.get('email')
+        email = self.cleaned_data.get('email').lower()
+        
         if User.objects.filter(email=email).exists():
-            raise forms.ValidationError("This email address is already in use.")
+            raise forms.ValidationError("Email already registered.")
+            
+        if not AllowedEmail.objects.filter(email=email).exists():
+            raise forms.ValidationError("Email not authorized.")
+            
         return email
 
