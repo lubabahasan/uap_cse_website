@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth.decorators import login_required
+
 
 from .forms import SignUpForm
 from .models import Profile
@@ -57,6 +59,7 @@ def login_view(request):
             return redirect('login')
     return render(request, 'login.html')
 
+@login_required
 def home(request):
     return render(request, 'home.html')
 
